@@ -1,0 +1,86 @@
+
+```{r}
+suppressPackageStartupMessages(library(pacman))
+suppressPackageStartupMessages(p_load(data.table))
+suppressPackageStartupMessages(p_load(plyr))
+suppressPackageStartupMessages(p_load(dplyr))
+suppressPackageStartupMessages(p_load(Seurat))
+suppressPackageStartupMessages(p_load(here))
+```
+
+```{r}
+work.dir <- '/sdata/activities/white-morphic/users/whitebr/kayee-mini-challenge/'
+#sc.rds.file <- paste0(work.dir, "CHOOSE-sc-wt-and-tfs-seurat-obj.rds")
+multiome.rds.file <- paste0(work.dir, "CHOOSE-multiome-seurat-obj.rds")
+use_global_var_genes <- TRUE
+grnboost2.files <- list.files(path = work.dir, pattern="*.grn.tsv.gz")
+if(use_global_var_genes) {
+  grnboost2.files <- list.files(path = work.dir, pattern="*global_var_genes.grn.tsv.gz")
+}
+```
+
+```{r}
+multiome.obj <- readRDS(multiome.rds.file)
+```
+
+```{r}
+all.res <- 
+  ldply(grnboost2.files,
+        .fun = function(grnboost2.file) {
+                 grnboost2.res <- as.data.frame(fread(paste0(work.dir, grnboost2.file)))
+                 grnboost2.res <- grnboost2.res[, !(colnames(grnboost2.res) == "V1")]
+                 cell.type <- gsub(x = grnboost2.file, pattern=".grn.tsv.gz", replacement="")
+                 cell.type <- gsub(x = cell.type, pattern=".global_var_genes", replacement="")
+                 print(cell.type)
+                 ct.obj <- multiome.obj
+                 if(cell.type != "all_cell_types") {
+                   ct.obj <- multiome.obj[,multiome.obj@meta.data$celltype_jf == cell.type]
+                 }
+                 data <-GetAssayData(ct.obj, layer="data")
+                 tfs <- unique(grnboost2.res$TF)
+                 cr <- cor(x=as.matrix(t(data[tfs,])), y=as.matrix(t(data)))
+                 cr <- reshape2::melt(cr)
+                 colnames(cr) <- c("TF", "target", "cor.p")
+                 grnboost2.res <- merge(grnboost2.res, cr)
+                 grnboost2.res[,"cell.type"] <- cell.type
+                 grnboost2.res
+        })
+all.res[,"score"] <- all.res[,"importance"] * sign(all.res[,"cor.p"])
+
+# Put score in [-1, 1] (across all TFs / cell type!)
+all.res[,"score"] <- all.res[,"score"] / max(abs(all.res[,"score"])) 
+```
+
+```{r}
+# Add p-values
+pval_cutoff = pnorm(4, lower.tail=FALSE)
+
+all.res <-
+  ddply(all.res, .variables = c("cell.type", "TF"),
+        .fun = function(df) {
+          ## Take the bottom half as our null hypothesis
+          #df <- df[order(df$importance, decreasing=FALSE),]
+          #null.imps <- df$importance[1:round(nrow(df)/2)]
+          cols <- colnames(df)
+          cols <- cols[!(cols %in% c("cell.type", "TF"))]
+          #df[,"pval"] <- pnorm(df$importance, mean = mean(null.imps), sd = sd(null.imps), lower.tail=FALSE)
+          df[,"pval"] <- pnorm(df$importance, mean = 0, sd = sd(df$importance), lower.tail=FALSE)
+          df[,"padj"] <- p.adjust(df[,"pval"])
+          df[,"significant"] <- FALSE
+          flag <- df[,"pval"] < pval_cutoff
+          df[flag, "significant"] <- TRUE
+          df[, c(cols, "pval", "padj", "significant")]
+        })
+```
+
+```{r}
+odir <- paste0(here(), "/resources/")
+dir.create(odir, showWarnings=FALSE)
+ofile <- paste0(odir, "postprocessed-grnboost2-all-tfs-celltypes.csv.gz")
+if(use_global_var_genes) {
+  ofile <- paste0(odir, "postprocessed-grnboost2-all-tfs-celltypes-global-var-genes.csv.gz")
+}
+print(ofile)
+fwrite(as.data.frame(all.res), file = ofile, row.names=FALSE, col.names=TRUE, quote=FALSE, sep=",")
+```
+
