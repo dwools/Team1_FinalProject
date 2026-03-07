@@ -17,4 +17,4 @@ The data and scripts in this repository were obtained from the following sources
       - *CHOOSE-sc-wt-and-tf-log-norm.csv.gz* (NOTE: This file is **NOT** included in this remote repository, as it exceeds 100 MB. It will need to be obtained from the Google Drive above and copied to your local directory of this repo)
       - *CHOOSE-sc-wt-and-tf-metadata.csv*
      
-(NOTE: All of these data files have been relocated to the "morphic-mini-challenge/resources" directory, as this was specified by the reference VIPER script (apply-viper-evaluation.R) that Brian White provided, on which our Viper evaluation notebooks are based)
+(NOTE: All of these data files have been relocated to the "morphic-mini-challenge/resources" directory, as this was specified by the reference VIPER script (apply-viper-evaluation.R) that Brian White provided, on which our VIPER evaluation notebooks are based)
