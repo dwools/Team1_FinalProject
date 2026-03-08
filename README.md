@@ -20,7 +20,7 @@ The data and scripts in this repository were obtained from the following sources
 (**NOTE**: All of these data files have been relocated to the "morphic-mini-challenge/resources" directory, as this was specified by the reference VIPER script (apply-viper-evaluation.R) that Brian White provided, on which our VIPER evaluation notebooks are based)
 
 ## GRNBoost2
-GRNBoost2 results are inferred from the **CHOOSE multiome** data, specifically the file `postprocessed-grnboost2-all-tfs-celltypes-global-var-genes.csv.gz`.
+GRNBoost2 results are inferred from the **CHOOSE multiome** data, specifically the file `postprocessed-grnboost2-all-tfs-celltypes-global-var-genes.csv.gz`. In other words, the file `postprocessed-grnboost2-all-tfs-celltypes-global-var-genes.csv.gz` represents our provided input for GRNBoost2.
 
 In `postprocessed-grnboost2-all-tfs-celltypes-global-var-genes.csv.gz`, each row lists a putative TF target. 
 
