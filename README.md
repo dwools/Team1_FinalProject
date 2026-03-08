@@ -44,9 +44,25 @@ Among other columns, the cell type is in `cell.type`, the transcription factor g
 MoR (a termed used by our evaluation metric) is between -1 and 1, with the absolute value indicating the strength of the TF target interaction (higher absolute values imply stronger interactions) and the sign indicating the direction of regulation (with positive values indicating TF induction/positive regulation of the target and negative values indicating TF repression/negative regulation of the target).
 
 ## VIPER evaluation
+### Reminder of what VIPER does
+VIPER quantifies the activity of a transcription factor protein via the mRNA expression of the genes that specific transcraption factor regulates.
+
+Remember: a transcription factor prompts/stimulates the transcription of a specific set of genes (this occurs by the transcription factor *protein* binding with DNA in such a manner that those genes are transcribed into mRNA transcripts).
+
+So, if a transcription factor has been knocked out (i.e., the protein isn't floating around in the cell anymore), the expression of those genes will drop.
+
+Thus, we assume that those genes will be expressed more in wild-type cells than in cells in their transcription factor is knocked out.
+
+These expression discrepancies—between wild-type cells and cells with a transcription factor knocked out—are what VIPER computes and plots.
+
+### Input
 Among our default data, the inputs for VIPER evaluation are:
 - `CHOOSE-sc-wt-and-tf-metadata.csv`
 - `CHOOSE-sc-wt-and-tf-log-norm.csv.gz`
 - `CHOOSE-tf-to-analyze-metadata.csv`
 - `postprocessed-grnboost2-all-tfs-celltypes-global-var-genes.csv.gz` (GRNBoost2 output)
 
+### Output
+VIPER generates a plot showing WT and TF KO distributions for six TF/cell type pairs, which includes the Wilcoxon p-value. See the plot generated from the default data at `mini-morphic-challenge` >> `plots` >> `CHOOSE-TF-viper-distributions.png`).
+
+**NOTE**: only *one* TF/cell-type pair (TF BCL11A in cell type ctx_npc) is significant. This is the most reliable pair, and we recommend you focus on it during your testing (in the image file indicated above, it's the top-middle plot.)
