@@ -1,0 +1,1 @@
+2026-03-13 12:45:31,711 - expression.csv - INFO - Command: train.py --input kegni_inputs/ctx_ip/expression.csv.gz --data_path kegni_inputs/ctx_ip/merged_kg.tsv --n_neighbors 30 --max_steps 1000 --num_hidden 256 --num_heads 4 --num_layers 2 --lambda_kge 1 --device -1
