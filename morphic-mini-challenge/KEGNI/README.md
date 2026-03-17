@@ -17,10 +17,12 @@ You must have R installed with the following packages:
 * **Bioinformatics (Bioconductor):** `decoupleR`, `viper`
 
 ### Python Environment
-You must have Python 3 accessible via `python`, `python3`, or `py` in your system PATH. Required libraries include:
-* `torch`
-* `pandas`
-* `numpy`
+You must have **Python 3.11** (I used **Python 3.11.9**) accessible via `python`, `python3`, or `py` in your system PATH. **Later versions of Python are incompatible with DGL**.
+Required libraries include:
+* `torch` (torch 2.3.0+cpu)
+* `pandas` (pandas 3.0.1)
+* `numpy` (numpy 1.26.4)
+* `dgl` (dgl 2.2.1)
 
 ---
 
