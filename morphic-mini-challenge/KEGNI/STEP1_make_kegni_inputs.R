@@ -14,19 +14,23 @@ is_absolute_path <- function(path) {
 script_path <- function() {
   file_arg <- grep("^--file=", commandArgs(FALSE), value = TRUE)
   if (length(file_arg) > 0) {
-    return(sub("^--file=", "", file_arg[[1]]))
+    script_file <- sub("^--file=", "", file_arg[[1]])
+    return(normalizePath(dirname(script_file), winslash = "/", mustWork = FALSE))
   }
 
   args_full <- commandArgs(trailingOnly = FALSE)
   flag_index <- which(args_full == "-f")
   if (length(flag_index) > 0) {
-    return(args_full[flag_index[[1]] + 1])
+    script_file <- args_full[flag_index[[1]] + 1]
+    return(normalizePath(dirname(script_file), winslash = "/", mustWork = FALSE))
   }
 
   normalizePath(getwd(), winslash = "/", mustWork = TRUE)
 }
 
-kegni_root <- dirname(normalizePath(script_path(), winslash = "/", mustWork = FALSE))
+kegni_root <- script_path()
+project_root <- dirname(kegni_root)
+repo_root <- dirname(project_root)
 
 resolve_path <- function(path) {
   if (is_absolute_path(path)) {
@@ -69,11 +73,11 @@ resolve_path <- function(path) {
 # -----------------------------
 # Defaults
 # -----------------------------
-default_expr   <- file.path(kegni_root, "..", "resources", "CHOOSE-multiome-wt-log-norm.csv.gz")
-default_meta   <- file.path(kegni_root, "..", "resources", "CHOOSE-multiome-wt-metadata.csv")
+default_expr   <- file.path(project_root, "resources", "CHOOSE-multiome-wt-log-norm.csv.gz")
+default_meta   <- file.path(project_root, "resources", "CHOOSE-multiome-wt-metadata.csv")
 default_kegg   <- file.path(kegni_root, "inputs", "KG", "KEGG_hs.tsv")
 default_trrust <- file.path(kegni_root, "inputs", "KG", "TRRUST_hs.tsv")
-default_tf     <- file.path(kegni_root, "..", "resources", "TF_list.csv")
+default_tf     <- file.path(project_root, "resources", "TF_list.csv")
 default_out    <- file.path(kegni_root, "kegni_inputs")
 
 # -----------------------------
@@ -98,12 +102,6 @@ tf_file     <- resolve_path(get_arg("--tf",     default_tf))
 out_root    <- resolve_path(get_arg("--out",    default_out))
 
 cell_types_arg <- get_arg("--cell_types", NULL)
-cell_types <- if (is.null(cell_types_arg)) {
-  unique(read_csv(meta_file, show_col_types = FALSE)$celltype_jf)
-} else {
-  trimws(unlist(strsplit(cell_types_arg, ",", fixed = TRUE)))
-}
-cell_types <- cell_types[nzchar(cell_types) & !is.na(cell_types)]
 
 # -----------------------------
 # Validate files
@@ -121,9 +119,7 @@ if (length(missing_files) > 0) {
 dir.create(out_root, showWarnings = FALSE, recursive = TRUE)
 
 message("Reading expression matrix: ", expr_file)
-expr_mat <- read_csv(expr_file, show_col_types = FALSE) %>%
-  column_to_rownames(var = colnames(.)[1]) %>%
-  as.data.frame(check.names = FALSE)
+expr_mat <- read.csv(expr_file, row.names = 1, check.names = FALSE, stringsAsFactors = FALSE)
 
 # Normalize gene symbols in expression
 rownames(expr_mat) <- toupper(rownames(expr_mat))
@@ -140,12 +136,29 @@ if (anyDuplicated(rownames(expr_mat)) > 0) {
 }
 
 message("Reading metadata: ", meta_file)
-meta_df <- read_csv(meta_file, show_col_types = FALSE) %>%
-  column_to_rownames(var = colnames(.)[1]) %>%
-  as.data.frame(check.names = FALSE)
+meta_df <- read.csv(meta_file, row.names = 1, check.names = FALSE, stringsAsFactors = FALSE)
+# Organize metadata rows so they're in the same order as expression columns (after intersecting shared cells)
+# meta_df <- meta_df[colnames(expr_mat), , drop = FALSE]
+
+
+# print(meta_df[1:5, 106:110])
 
 if (!("celltype_jf" %in% colnames(meta_df))) {
   stop("metadata file must contain a column named 'celltype_jf'.")
+}
+
+# Normalize once so comparisons are robust across R versions and input quirks.
+meta_df$celltype_jf <- trimws(as.character(meta_df$celltype_jf))
+
+if (is.null(cell_types_arg)) {
+  cell_types <- unique(meta_df$celltype_jf)
+} else {
+  cell_types <- trimws(unlist(strsplit(cell_types_arg, ",", fixed = TRUE)))
+}
+cell_types <- unique(cell_types[nzchar(cell_types) & !is.na(cell_types)])
+
+if (length(cell_types) == 0) {
+  stop("No cell types were found to process.")
 }
 
 # Keep only shared cells and align metadata to expression columns
@@ -300,7 +313,7 @@ summary_df <- bind_rows(summary_list)
 write_csv(summary_df, file.path(out_root, "summary.csv"))
 
 message("\nSummary:")
-print(summary_df)
+message(capture.output(print(summary_df)), sep = "\n")
 
 message("\nDone.")
 message("KEGNI-ready input sets written to: ", out_root)

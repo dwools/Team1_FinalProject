@@ -1,0 +1,22 @@
+           AAAGAACGTACAAGTA-1_1 AACACACGTACAACGG-1_1 AACTTCTAGAAGATCT-1_1
+AL627309.1                    0            0.0000000            0.0000000
+LINC00115                     0            0.0000000            0.0000000
+NOC2L                         0            0.7493259            0.9538407
+KLHL17                        0            0.0000000            0.0000000
+AL645608.7                    0            0.0000000            0.0000000
+           ACCAAACTCCGATTAG-1_1 ACGTAACAGAAAGCGA-1_1
+AL627309.1                    0                    0
+LINC00115                     0                    0
+NOC2L                         0                    0
+KLHL17                        0                    0
+AL645608.7                    0                    0
+# A tibble: 5 × 9
+  celltype n_cells n_genes n_kegg_edges n_trrust_edges n_merged_edges
+  <chr>      <int>   <int>        <int>          <int>          <int>
+1 ge_in        126   14651        20915           4040          24841
+2 ctx_ex       185   15444        22650           4458          26972
+3 ge_npc       240   15623        22978           4638          27467
+4 ctx_npc       81   15312        22281           4503          26643
+5 ctx_ip       100   14831        21042           4070          24998
+# ℹ 3 more variables: n_tfs_total <int>, n_tfs_in_expr <int>,
+#   n_tfs_in_kg_gene1 <int>

@@ -4,13 +4,15 @@
 script_path <- function() {
         file_arg <- grep("^--file=", commandArgs(FALSE), value = TRUE)
         if (length(file_arg) > 0) {
-                return(sub("^--file=", "", file_arg[[1]]))
+                script_file <- sub("^--file=", "", file_arg[[1]])
+                return(normalizePath(dirname(script_file), winslash = "/", mustWork = FALSE))
         }
 
         args_full <- commandArgs(trailingOnly = FALSE)
         flag_index <- which(args_full == "-f")
         if (length(flag_index) > 0) {
-                return(args_full[flag_index[[1]] + 1])
+                script_file <- args_full[flag_index[[1]] + 1]
+                return(normalizePath(dirname(script_file), winslash = "/", mustWork = FALSE))
         }
 
         normalizePath(getwd(), winslash = "/", mustWork = TRUE)
@@ -69,17 +71,17 @@ getwd()
 # directory manually or use an alternative method to determine the file paths.
 
 # Resolve root paths from the script location so execution does not depend on cwd.
-kegni_root <- dirname(normalizePath(script_path(), winslash = "/", mustWork = FALSE))
-root <- dirname(kegni_root)
-print(paste("Root directory set to:", root))
+kegni_root <- script_path()
+project_root <- dirname(kegni_root)
+repo_root <- dirname(project_root)
 
-resources.dir <- paste0(root, "/resources/")
+resources.dir <- paste0(project_root, "/resources/")
 sc.metadata.file <- paste0(resources.dir, "CHOOSE-sc-wt-and-tf-metadata.csv")
 sc.data.file <- paste0(resources.dir, "CHOOSE-sc-wt-and-tf-log-norm.csv.gz")
 kegni.res.file <- paste0(resources.dir, "postprocessed-kegni-all-tfs-celltypes.csv.gz")
 tfs.to.analyze.file <- paste0(resources.dir, "CHOOSE-tf-to-analyze-metadata.csv")
 
-plot.dir <- paste0(root, "/plots/")
+plot.dir <- paste0(project_root, "/plots/")
 dir.create(plot.dir, showWarnings = FALSE)
 
 # Load in predictions to be evaluated. Here from kegni

@@ -1,6 +1,6 @@
 cell_type,scg_embedding_file,norm,n_genes,n_tfs,n_ranked_tf_target_edges,status
-ge_in,outputs/ge_in-expression.csv_2026-03-14-15-22-16-scg_embedding.csv,-1,14651,5,73250,ok
-ctx_ex,outputs/ctx_ex-expression.csv_2026-03-14-16-11-09-scg_embedding.csv,-1,15444,5,77215,ok
-ge_npc,outputs/ge_npc-expression.csv_2026-03-14-17-06-17-scg_embedding.csv,-1,15623,5,78110,ok
-ctx_npc,outputs/ctx_npc-expression.csv_2026-03-14-18-04-24-scg_embedding.csv,-1,15312,5,76555,ok
-ctx_ip,outputs/ctx_ip-expression.csv_2026-03-14-18-52-11-scg_embedding.csv,-1,14831,5,74150,ok
+ge_in,NA,-1,NA,NA,0,missing_scg_embedding
+ctx_ex,NA,-1,NA,NA,0,missing_scg_embedding
+ge_npc,NA,-1,NA,NA,0,missing_scg_embedding
+ctx_npc,NA,-1,NA,NA,0,missing_scg_embedding
+ctx_ip,NA,-1,NA,NA,0,missing_scg_embedding

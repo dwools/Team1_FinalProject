@@ -16,19 +16,23 @@ is_absolute_path <- function(path) {
 script_path <- function() {
   file_arg <- grep("^--file=", commandArgs(FALSE), value = TRUE)
   if (length(file_arg) > 0) {
-    return(sub("^--file=", "", file_arg[[1]]))
+    script_file <- sub("^--file=", "", file_arg[[1]])
+    return(normalizePath(dirname(script_file), winslash = "/", mustWork = FALSE))
   }
 
   args_full <- commandArgs(trailingOnly = FALSE)
   flag_index <- which(args_full == "-f")
   if (length(flag_index) > 0) {
-    return(args_full[flag_index[[1]] + 1])
+    script_file <- args_full[flag_index[[1]] + 1]
+    return(normalizePath(dirname(script_file), winslash = "/", mustWork = FALSE))
   }
 
   normalizePath(getwd(), winslash = "/", mustWork = TRUE)
 }
 
-kegni_root <- dirname(normalizePath(script_path(), winslash = "/", mustWork = FALSE))
+kegni_root <- script_path()
+project_root <- dirname(kegni_root)
+repo_root <- dirname(project_root)
 
 resolve_path <- function(path) {
   if (is_absolute_path(path)) {
@@ -76,7 +80,7 @@ resolve_path <- function(path) {
 
 
 
-default_meta <- file.path(kegni_root, "..", "resources", "CHOOSE-multiome-wt-metadata.csv")
+default_meta <- file.path(project_root, "resources", "CHOOSE-multiome-wt-metadata.csv")
 default_inputs_root  <- file.path(kegni_root, "kegni_inputs")
 default_outputs_root <- file.path(kegni_root, "outputs")
 default_out_root     <- file.path(kegni_root, "tf_target_edges")
@@ -93,17 +97,38 @@ get_arg <- function(flag, default = NULL) {
   args[idx[length(idx)] + 1]
 }
 
+meta_file    <- resolve_path(get_arg("--meta",         default_meta))
 inputs_root  <- resolve_path(get_arg("--inputs_root",  default_inputs_root))
 outputs_root <- resolve_path(get_arg("--outputs_root", default_outputs_root))
 out_root     <- resolve_path(get_arg("--out_root",     default_out_root))
 norm_value   <- as.numeric(get_arg("--norm", default_norm))
+
+required_files <- c(meta_file)
+missing_files <- required_files[!file.exists(required_files)]
+
+if (length(missing_files) > 0) {
+  stop(
+    "The following required input file(s) do not exist:\n",
+    paste("  -", missing_files, collapse = "\n")
+  )
+}
+
+meta_df <- read.csv(meta_file, row.names=1, check.names = FALSE, stringsAsFactors = FALSE)
+if (!("celltype_jf" %in% colnames(meta_df))) {
+  stop("Metadata file must contain a column named 'celltype_jf'.")
+}
+
 cell_types_arg <- get_arg("--cell_types", NULL)
 cell_types <- if (is.null(cell_types_arg)) {
-  unique(read_csv(default_meta, show_col_types = FALSE)$celltype_jf)
+  unique(as.character(meta_df$celltype_jf))
 } else {
   trimws(unlist(strsplit(cell_types_arg, ",", fixed = TRUE)))
 }
 cell_types <- cell_types[nzchar(cell_types) & !is.na(cell_types)]
+
+if (length(cell_types) == 0) {
+  stop("No cell types were found to process.")
+}
 
 dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
 

@@ -6,30 +6,38 @@ is_absolute_path <- function(path) {
   grepl("^(?:[A-Za-z]:[/\\\\]|/|\\\\\\\\)", path)
 }
 
+# This project assumes the directory structure Team1_FinalProject/morphic-mini-challenge/KEGNI. repo_root should be "Team1_FinalProject", project_root should be "Team1_FinalProject/morphic-mini-challenge", and kegni_root should be "Team1_FinalProject/morphic-mini-challenge/KEGNI". This script is assumed to be in the directory "Team1_FinalProject/morphic-mini-challenge/KEGNI". The script_path function should return the full path to this script, regardless of the current working directory. The resolve_path function should take a relative path and resolve it relative to the kegni_root directory, or return an absolute path if given one.
+
+# Find the path to this script, even if the working directory is not the same as the script's directory. This allows the script to be run from any location and still correctly find its inputs and outputs relative to its own location.
 script_path <- function() {
   file_arg <- grep("^--file=", commandArgs(FALSE), value = TRUE)
   if (length(file_arg) > 0) {
-    return(sub("^--file=", "", file_arg[[1]]))
+    script_file <- sub("^--file=", "", file_arg[[1]])
+    return(normalizePath(dirname(script_file), winslash = "/", mustWork = FALSE))
   }
 
-  args <- commandArgs(trailingOnly = FALSE)
-  script_flag_index <- which(args == "-f")
-  if (length(script_flag_index) > 0) {
-    return(args[script_flag_index[[1]] + 1])
+  args_full <- commandArgs(trailingOnly = FALSE)
+  flag_index <- which(args_full == "-f")
+  if (length(flag_index) > 0) {
+    script_file <- args_full[flag_index[[1]] + 1]
+    return(normalizePath(dirname(script_file), winslash = "/", mustWork = FALSE))
   }
 
   normalizePath(getwd(), winslash = "/", mustWork = TRUE)
 }
 
-script_dir <- dirname(normalizePath(script_path(), winslash = "/", mustWork = FALSE))
-repo_root <- script_dir
+
+# Find the path to the directory containing this script (Team1_FinalProject/morphic-mini-challenge/KEGNI).
+kegni_root <- script_path()
+project_root <- dirname(kegni_root)
+repo_root <- dirname(project_root)
 
 resolve_path <- function(path) {
   if (is_absolute_path(path)) {
     return(normalizePath(path, winslash = "/", mustWork = FALSE))
   }
 
-  normalizePath(file.path(repo_root, path), winslash = "/", mustWork = FALSE)
+  normalizePath(file.path(kegni_root, path), winslash = "/", mustWork = FALSE)
 }
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -103,9 +111,30 @@ find_python <- function(user_python = NULL) {
 }
 
 run_command <- function(command, command_args, error_message) {
-  status <- system2(command, args = command_args, stdout = "", stderr = "")
-  if (!identical(status, 0L)) {
-    stop(error_message, " Exit status: ", status, call. = FALSE)
+  output <- system2(
+    command,
+    args = shQuote(command_args),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  status <- attr(output, "status")
+  if (is.null(status)) {
+    status <- 0L
+  }
+  if (!identical(as.integer(status), 0L)) {
+    tail_output <- if (length(output) > 0) {
+      paste(tail(output, 20), collapse = "\n")
+    } else {
+      "<no output captured>"
+    }
+    stop(
+      error_message,
+      " Exit status: ", status,
+      "\nCommand: ", command,
+      "\nArgs: ", paste(command_args, collapse = " "),
+      "\nOutput tail:\n", tail_output,
+      call. = FALSE
+    )
   }
 }
 
@@ -128,14 +157,16 @@ ground_truth_dir <- resolve_path(get_arg("--ground_truth_dir", "./data/ground_tr
 python_config <- find_python(get_arg("--python", ""))
 
 old_wd <- getwd()
-setwd(repo_root)
+setwd(kegni_root)
 on.exit(setwd(old_wd), add = TRUE)
 
-train_script <- file.path(repo_root, "train.py")
-step1_script <- file.path(repo_root, "STEP1_make_kegni_inputs.R")
-step3_script <- file.path(repo_root, "STEP3_extract_kegni_tf_targets.R")
-step4_script <- file.path(repo_root, "STEP4_postprocess-CHOOSE-kegni.R")
-step5_script <- file.path(repo_root, "STEP5_apply-viper-evaluation_kegni.R")
+train_script <- file.path(kegni_root, "train.py")
+step1_script <- file.path(kegni_root, "STEP1_make_kegni_inputs.R")
+step3_script <- file.path(kegni_root, "STEP3_extract_kegni_tf_targets.R")
+step4_script <- file.path(kegni_root, "STEP4_postprocess-CHOOSE-kegni.R")
+step5_script <- file.path(kegni_root, "STEP5_apply-viper-evaluation_kegni.R")
+tf_target_edges_dir <- file.path(kegni_root, "tf_target_edges")
+postprocessed_output <- file.path(project_root, "resources", "postprocessed-kegni-all-tfs-celltypes.csv.gz")
 
 required_files <- c(
   train_script,
@@ -158,7 +189,7 @@ if (length(missing_files) > 0) {
   )
 }
 
-meta_df <- read.csv(meta_file, check.names = FALSE)
+meta_df <- read.csv(meta_file, row.names=1, check.names = FALSE, stringsAsFactors = FALSE)
 if (!("celltype_jf" %in% colnames(meta_df))) {
   stop("Metadata file must contain a 'celltype_jf' column.", call. = FALSE)
 }
@@ -181,7 +212,8 @@ cat("==================================================\n")
 
 run_command(
   command = find_rscript(),
-  command_args = c(
+  command_args = {
+    step1_args <- c(
     step1_script,
     "--expr", expr_file,
     "--meta", meta_file,
@@ -189,7 +221,14 @@ run_command(
     "--trrust", trrust_file,
     "--tf", tf_file,
     "--out", out_root
-  ),
+    )
+
+    if (!is.null(cell_types_arg) && nzchar(trimws(cell_types_arg))) {
+      step1_args <- c(step1_args, "--cell_types", cell_types_arg)
+    }
+
+    step1_args
+  },
   error_message = "Failed while building KEGNI input folders."
 )
 
@@ -198,7 +237,7 @@ cat("==================================================\n")
 cat("Step 2: Running KEGNI for each cell type\n")
 cat("==================================================\n")
 
-for (cell_type in cell_types) {
+for (cell_type in cell_types[1:1]) {
   input_expr <- file.path(out_root, cell_type, "expression.csv.gz")
   input_kg <- file.path(out_root, cell_type, "merged_kg.tsv")
 
@@ -285,12 +324,21 @@ cat("==================================================\n")
 
 run_command(
   command = find_rscript(),
-  command_args = c(
+  command_args = {
+    step3_args <- c(
     step3_script,
+    "--meta", meta_file,
     "--inputs_root", out_root,
     "--outputs_root", file.path(repo_root, "outputs"),
-    "--out_root", file.path(repo_root, "tf_target_edges")
-  ),
+    "--out_root", tf_target_edges_dir
+    )
+
+    if (!is.null(cell_types_arg) && nzchar(trimws(cell_types_arg))) {
+      step3_args <- c(step3_args, "--cell_types", cell_types_arg)
+    }
+
+    step3_args
+  },
   error_message = "Failed while extracting KEGNI TF-target edges."
 )
 
@@ -301,7 +349,11 @@ cat("==================================================\n")
 
 run_command(
   command = find_rscript(),
-  command_args = c(step4_script),
+  command_args = c(
+    step4_script,
+    "--input", file.path(tf_target_edges_dir, "all_celltypes_tf_target_ranked.csv"),
+    "--out", postprocessed_output
+  ),
   error_message = "Failed while postprocessing KEGNI outputs."
 )
 
