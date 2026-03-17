@@ -57,3 +57,14 @@ The entire pipeline can be run using the orchestrator script. It automatically r
 ### Basic Command
 ```bash
 Rscript main.R
+```
+
+### References
+The primary code to run KEGNI is available at https://github.com/Lipxiao/KEGNI.
+KEGNI's principal literature reference is as follows:
+Li P, Li L, Nan J, Chen J, Sun J, Cao Y. KEGNI: knowledge graph enhanced framework for gene regulatory network inference. Genome Biol. 2025 Sep 22;26(1):294. doi: 10.1186/s13059-025-03780-7. PMID: 40983951; PMCID: PMC12455831. https://pmc.ncbi.nlm.nih.gov/articles/PMC12455831/
+
+### LLM Disclaimer
+GitHub Copilot and ChatGPT 5.4 were used in the composition of the R scripts.
+
+
