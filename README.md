@@ -9,18 +9,23 @@ Each algorithm and baseline control has its own standalone R Jupyter Notebook lo
 Ensure your repository is structured as follows. All standalone notebooks will read from the shared `resources` directory.
 
 ```text
-morphic-mini-project/
-├── GENIE3/
+**morphic-mini-project**/
+├── **GENIE3**/
 │   └── apply-viper-evaluation_genie3.ipynb                 # GENIE3 inference & VIPER
-├── TIGRESS/
+├── **TIGRESS**/
 │   └── apply-viper-evaluation_tigress.ipynb                # TIGRESS inference & VIPER
-├── KEGNI/
-│   └── apply-viper-evaluation_kegni.ipynb                  # KEGNI inference & VIPER
-├── MOSTEXPRESSED/
+├── **KEGNI**/
+│   └── main.R                                              # KEGNI inference & VIPER
+│   └── STEP1_make_kegni_inputs                             # KEGNI inference & VIPER
+│   └── train.py                                            # KEGNI inference & VIPER
+│   └── STEP3_extract_kegni_tf_targets.R                    # KEGNI inference & VIPER
+│   └── STEP4_postprocess-CHOOSE-kegni.R                    # KEGNI inference & VIPER
+│   └── STEP5_apply_viper_evaluation_kegni                  # KEGNI inference & VIPER 
+├── **MOSTEXPRESSED**/
 │   └── apply-viper-evaluation_control_mostexpressed.ipynb  # Control: Most expressed TFs
-├── MOSTVARIABLE/
+├── **MOSTVARIABLE**/
 │   └── apply-viper-evaluation_control_mostvariable.ipynb   # Control: Most variable TFs
-└── resources/
+└── **resources**/
     ├── postprocessed-mean-baseline.csv.gz          # Baseline mean metrics
     ├── postprocessed-variance-baseline.csv.gz      # Baseline variance metrics
     ├── CHOOSE-sc-wt-and-tf-log-norm.csv.gz         # Compressed log-normalized expression data
