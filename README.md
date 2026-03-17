@@ -1,3 +1,33 @@
+# Gene Regulatory Network Inference & VIPER Evaluation
+
+This repository evaluates the performance of different gene regulatory network (GRN) inference algorithms and control baselines using single-cell RNA sequencing data. 
+
+Each algorithm and baseline control has its own standalone R Jupyter Notebook located in its respective directory. These notebooks handle the end-to-end process: loading the data, running the specific inference/control method, and applying VIPER for protein activity evaluation.
+
+## :open_file_folder: Project Structure
+
+Ensure your repository is structured as follows. All standalone notebooks will read from the shared `resources` directory.
+
+```text
+your_project_folder/
+├── GENIE3/
+│   └── apply-viper-evaluation_genie3.ipynb                 # GENIE3 inference & VIPER
+├── TIGRESS/
+│   └── apply-viper-evaluation_tigress.ipynb                # TIGRESS inference & VIPER
+├── KEGNI/
+│   └── apply-viper-evaluation_kegni.ipynb                  # KEGNI inference & VIPER
+├── MOSTEXPRESSED/
+│   └── apply-viper-evaluation_control_mostexpressed.ipynb  # Control: Most expressed TFs
+├── MOSTVARIABLE/
+│   └── apply-viper-evaluation_control_mostvariable.ipynb   # Control: Most variable TFs
+└── resources/
+    ├── postprocessed-mean-baseline.csv.gz          # Baseline mean metrics
+    ├── postprocessed-variance-baseline.csv.gz      # Baseline variance metrics
+    ├── CHOOSE-sc-wt-and-tf-log-norm.csv.gz         # Compressed log-normalized expression data
+    ├── CHOOSE-sc-wt-and-tf-metadata.csv            # Cell metadata 
+    └── CHOOSE-tf-to-analyze-metadata.csv           # Metadata for target transcription factors
+```
+
 # IMPORTANT DATA INFORMATION
 
 The data and scripts in this repository were obtained from the following sources:
