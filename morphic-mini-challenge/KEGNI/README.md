@@ -57,6 +57,7 @@ The entire pipeline can be run using the orchestrator script. It automatically r
 ### Basic Command
 ```bash
 Rscript main.R
+```
 
 ### References
 The primary code to run KEGNI is available at https://github.com/Lipxiao/KEGNI.
