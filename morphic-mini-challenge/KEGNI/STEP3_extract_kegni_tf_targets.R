@@ -113,6 +113,32 @@ if (length(missing_files) > 0) {
   )
 }
 
+if (!dir.exists(inputs_root)) {
+  stop("The inputs root directory does not exist: ", inputs_root)
+}
+
+if (!dir.exists(outputs_root)) {
+  stop(
+    "The outputs root directory does not exist: ", outputs_root,
+    "\nPass the KEGNI outputs folder via --outputs_root (for example, KEGNI/outputs)."
+  )
+}
+
+available_scg <- list.files(
+  outputs_root,
+  recursive = TRUE,
+  full.names = TRUE,
+  pattern = "scg_embedding\\.csv$",
+  ignore.case = TRUE
+)
+
+if (length(available_scg) == 0) {
+  stop(
+    "No scg embedding files were found under outputs_root: ", outputs_root,
+    "\nExpected files matching *scg_embedding.csv."
+  )
+}
+
 meta_df <- read.csv(meta_file, row.names=1, check.names = FALSE, stringsAsFactors = FALSE)
 if (!("celltype_jf" %in% colnames(meta_df))) {
   stop("Metadata file must contain a column named 'celltype_jf'.")

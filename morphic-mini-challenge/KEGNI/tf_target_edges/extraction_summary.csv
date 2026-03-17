@@ -1,6 +1,0 @@
-cell_type,scg_embedding_file,norm,n_genes,n_tfs,n_ranked_tf_target_edges,status
-ge_in,NA,-1,NA,NA,0,missing_scg_embedding
-ctx_ex,NA,-1,NA,NA,0,missing_scg_embedding
-ge_npc,NA,-1,NA,NA,0,missing_scg_embedding
-ctx_npc,NA,-1,NA,NA,0,missing_scg_embedding
-ctx_ip,NA,-1,NA,NA,0,missing_scg_embedding

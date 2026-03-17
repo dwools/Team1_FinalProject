@@ -146,7 +146,7 @@ tf_file <- resolve_path(get_arg("--tf", "../resources/TF_list.csv"))
 out_root <- resolve_path(get_arg("--out", "kegni_inputs"))
 
 n_neighbors <- as.integer(get_arg("--n_neighbors", "30"))
-max_steps <- as.integer(get_arg("--max_steps", "1000"))
+max_steps <- as.integer(get_arg("--max_steps", "1"))
 num_hidden <- as.integer(get_arg("--num_hidden", "256"))
 num_heads <- as.integer(get_arg("--num_heads", "4"))
 num_layers <- as.integer(get_arg("--num_layers", "2"))
@@ -237,7 +237,7 @@ cat("==================================================\n")
 cat("Step 2: Running KEGNI for each cell type\n")
 cat("==================================================\n")
 
-for (cell_type in cell_types[1:1]) {
+for (cell_type in cell_types) {
   input_expr <- file.path(out_root, cell_type, "expression.csv.gz")
   input_kg <- file.path(out_root, cell_type, "merged_kg.tsv")
 
@@ -280,13 +280,8 @@ for (cell_type in cell_types[1:1]) {
   }
 
   # Snapshot outputs/ before this training run so we can identify new files afterwards
-  outputs_dir <- file.path(repo_root, "outputs")
+  outputs_dir <- file.path(kegni_root, "outputs")
   embedding_pattern <- "-(?:kgg|relation|scg)_embedding\\.csv$"
-  files_before <- if (dir.exists(outputs_dir)) {
-    list.files(outputs_dir, pattern = embedding_pattern, full.names = TRUE)
-  } else {
-    character(0)
-  }
 
   run_command(
     command = python_config$command,
@@ -295,27 +290,19 @@ for (cell_type in cell_types[1:1]) {
   )
 
   # Rename the newly created embedding CSVs to include the cell type prefix
-  files_after <- if (dir.exists(outputs_dir)) {
-    list.files(outputs_dir, pattern = embedding_pattern, full.names = TRUE)
-  } else {
-    character(0)
-  }
+  # change working directory to outputs/ to find the new files, then change back after renaming
+  setwd(outputs_dir)
+  files_to_rename <- c(list.files(pattern = embedding_pattern)) # replace with actual patternfiles_to_rename
 
-  new_files <- setdiff(files_after, files_before)
-
-  if (length(new_files) == 0) {
-    warning(sprintf("No new embedding CSVs found in outputs/ after KEGNI run for %s.", cell_type))
-  } else {
-    for (out_file in new_files) {
-      renamed <- file.path(dirname(out_file), paste0(cell_type, "-", basename(out_file)))
-      if (!file.rename(out_file, renamed)) {
-        warning(sprintf("Could not rename: %s", out_file))
-      } else {
-        cat(sprintf("  Renamed: %s\n         -> %s\n", basename(out_file), basename(renamed)))
+  for (file in files_to_rename) {
+      if (!grepl("_expression.csv", file)) {
+          new_file_name <- paste0(cell_type, "_", file)
+          file.rename(file, new_file_name)
+          print(new_file_name)
       }
     }
+  setwd(kegni_root)
   }
-}
 
 cat("\n")
 cat("==================================================\n")
@@ -329,7 +316,7 @@ run_command(
     step3_script,
     "--meta", meta_file,
     "--inputs_root", out_root,
-    "--outputs_root", file.path(repo_root, "outputs"),
+    "--outputs_root", file.path(kegni_root, "outputs"),
     "--out_root", tf_target_edges_dir
     )
 
