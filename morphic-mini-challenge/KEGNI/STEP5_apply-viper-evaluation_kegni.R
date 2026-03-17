@@ -57,20 +57,8 @@ suppressPackageStartupMessages(p_load(viper))
 #
 # Heads up: doMC is not available on Windows, so this code will only work on
 # Unix-like systems (Linux, macOS).
-getwd()
 
 # Initialize variables
-# Copy scRNA-seq metadata and data files from Drive to resources folder.
-# root <- dirname(dirname(this.path::this.path()))
-# This line throws the following error:
-# Error in .in_shell_path(verbose, original, for.msg, contents):
-# R is running from a shell and argument 'FILE' is missing.
-# This is because this.path() is designed to work in interactive R sessions and
-# may not function correctly in certain environments, such as when running
-# scripts or in non-interactive contexts. To fix this, you can set the root
-# directory manually or use an alternative method to determine the file paths.
-
-# Resolve root paths from the script location so execution does not depend on cwd.
 kegni_root <- script_path()
 project_root <- dirname(kegni_root)
 repo_root <- dirname(project_root)
@@ -81,7 +69,7 @@ sc.data.file <- paste0(resources.dir, "CHOOSE-sc-wt-and-tf-log-norm.csv.gz")
 kegni.res.file <- paste0(resources.dir, "postprocessed-kegni-all-tfs-celltypes.csv.gz")
 tfs.to.analyze.file <- paste0(resources.dir, "CHOOSE-tf-to-analyze-metadata.csv")
 
-plot.dir <- paste0(project_root, "/plots/")
+plot.dir <- paste0(project_root, "/plots/KEGNI_plot/")
 dir.create(plot.dir, showWarnings = FALSE)
 
 # Load in predictions to be evaluated. Here from kegni
