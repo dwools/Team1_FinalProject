@@ -9,7 +9,7 @@ Each algorithm and baseline control has its own standalone R Jupyter Notebook lo
 Ensure your repository is structured as follows. All standalone notebooks will read from the shared `resources` directory.
 
 ```text
-your_project_folder/
+morphic-mini-project/
 ├── GENIE3/
 │   └── apply-viper-evaluation_genie3.ipynb                 # GENIE3 inference & VIPER
 ├── TIGRESS/
